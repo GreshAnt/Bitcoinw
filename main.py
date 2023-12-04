@@ -20,7 +20,15 @@ def call_api(api_endpoint, params=None):
     
 
 def now_time_str():
-    api_response = call_api(TIME_API, params=None)
+    print('Trying to get time.')
+    while True:
+        try:
+            api_response = call_api(TIME_API, params=None)
+            break
+        except Exception as e:
+            print('Failed, retying...')
+            continue
+        	
     whole_datetime = api_response['datetime']
     whole_datetime_spilted = whole_datetime.split(':')
     if whole_datetime_spilted[1] != ('1' or '01'):
@@ -35,18 +43,18 @@ def now_time_str():
         datetime_str1 = datetime_str1.split(':')
         datetime_str1 = datetime_str1[0] + ':0' + datetime_str1[1]
     
-
     return (datetime_str1, datetime_str2)
 
 
 def bitcoin(*datetime_str):
+    print('Trying to get bitcoin prise.')
     bitcoin_api = f'https://production.api.coindesk.com/v2/tb/price/values/BTC?start_date={datetime_str[0]}&end_date={datetime_str[1]}&interval=1m&ohlc=true'
     api_response = call_api(bitcoin_api, params=None)
     while True:
         try:
             bt = api_response['data']['entries'][0][1:]
             break
-        except IndexError:
+        except Exception as e:
             continue
     return bt
 
@@ -55,12 +63,19 @@ if __name__ == '__main__':
     datetime_str = now_time_str()
     last_co = bitcoin(*datetime_str)
     co = last_co
-    print(f'>{co[0]}\n>{co[1]}\n>{co[2]}')
+    print(f'\n\n>{co[0]}\n>{co[1]}\n>{co[2]}\n\n')
+    
     while True:
-        datetime_str = now_time_str()
-        co = bitcoin(*datetime_str)
-        if co != last_co:
-            print(f'>{co[0]}\n>{co[1]}\n>{co[2]}')
-        last_co = co
-        # print(f'>{co[0]}\n>{co[1]}\n>{co[2]}')
-        # time.sleep(10)
+        try:
+            datetime_str = now_time_str()
+            co = bitcoin(*datetime_str)
+            
+            if co != last_co:
+                print(f'\n\n>{co[0]}\n>{co[1]}\n>{co[2]}\n\n')
+                last_co = co
+            else:  # 修正此行的缩进
+                print('No updates, retrying...')
+            
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            print('Retrying...')
